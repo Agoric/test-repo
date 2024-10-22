@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-const fs = require('fs');
 
 // Capture input parameter (e.g., "Test Job")
 const jobName = process.argv[2];
