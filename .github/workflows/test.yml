@@ -31,6 +31,8 @@ jobs:
             node-version: '18'
 
         - name: Final Job
+          env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           run: |
             echo "Determining which workflow triggered the Final Job..."
             node source/dump-ci-stats-to-gcp-logs.js "Test Job"
