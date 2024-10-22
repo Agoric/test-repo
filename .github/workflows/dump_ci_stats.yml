@@ -28,4 +28,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
+          echo $GITHUB_TOKEN
+          echo $GCP_CREDENTIALS
           node source/dump-ci-stats-to-gcp-logs.js "${{ inputs.workflow_name }}"
