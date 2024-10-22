@@ -1,4 +1,4 @@
-// const axios = require('axios');
+// const fetch = require('node-fetch');
 const fs = require('fs');
 
 // Capture input parameter (e.g., "Test Job")
@@ -9,13 +9,14 @@ const githubToken = process.env.GITHUB_TOKEN;  // GitHub token for API access
 const repo = process.env.GITHUB_REPOSITORY;    // The repository (owner/repo)
 const runId = process.env.GITHUB_RUN_ID;       // Run ID for this particular workflow execution
 
-// API endpoint to get workflow run information
-const apiUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
+// API endpoint to get the workflow run details and jobs
+const workflowUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
+const jobsUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`;
 
-// Fetch workflow status via GitHub API
-async function fetchWorkflowStatus() {
+// Fetch workflow run-level details
+async function fetchWorkflowDetails() {
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(workflowUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${githubToken}`,
@@ -29,40 +30,81 @@ async function fetchWorkflowStatus() {
 
         const data = await response.json();
 
-        // Extract relevant information
-        const status = data.status;           // in_progress, completed, etc.
-        const conclusion = data.conclusion;   // success, failure, neutral, cancelled, etc.
-        const startTime = data.created_at;
-        const endTime = data.updated_at;
+        // Extract relevant workflow-level information
+        const workflowDetails = {
+            runId: data.id,
+            workflowName: data.name,
+            status: data.status,           // e.g., "in_progress", "completed"
+            conclusion: data.conclusion,   // e.g., "success", "failure"
+            createdAt: data.created_at,
+            updatedAt: data.updated_at,
+            actor: data.actor.login,       // Who triggered the workflow
+            repository: data.repository.full_name
+        };
 
-        const executionTime = (new Date(endTime) - new Date(startTime)) / 1000;  // Convert to seconds
-
-        return { status, conclusion, executionTime, startTime, endTime };
+        return workflowDetails;
     } catch (error) {
-        console.error("Error fetching workflow status:", error);
+        console.error("Error fetching workflow details:", error);
         process.exit(1);
     }
 }
 
-// Main function to capture and log the stats
-(async () => {
-    const workflowStats = await fetchWorkflowStatus();
+// Fetch job details for the workflow run
+async function fetchJobDetails() {
+    try {
+        const response = await fetch(jobsUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+            },
+        });
 
-    const jobStats = {
-        jobName: jobName,
-        repository: repo,
-        runId: runId,
-        status: workflowStats.status,
-        conclusion: workflowStats.conclusion,
-        executionTime: `${workflowStats.executionTime} seconds`,
-        startTime: workflowStats.startTime,
-        endTime: workflowStats.endTime,
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Now we extract the relevant information from each job in the workflow run
+        const jobDetails = data.jobs.map(job => ({
+            jobId: job.id,
+            jobName: job.name,
+            status: job.status,         // e.g., "completed", "in_progress"
+            conclusion: job.conclusion, // e.g., "success", "failure", "cancelled", "skipped"
+            startedAt: job.started_at,
+            completedAt: job.completed_at,
+            executionTime: job.completed_at ? 
+                (new Date(job.completed_at) - new Date(job.started_at)) / 1000 : null // In seconds
+        }));
+
+        return jobDetails;
+    } catch (error) {
+        console.error("Error fetching job details:", error);
+        process.exit(1);
+    }
+}
+
+// Main function to capture and log the combined workflow and job stats
+(async () => {
+    const workflowStats = await fetchWorkflowDetails();
+    const jobStats = await fetchJobDetails();
+
+    // Combine workflow stats and job stats into one object
+    const finalStats = {
+        workflow: workflowStats,
+        jobs: jobStats
     };
 
+    // Log the combined stats to the console
+    // console.log("Combined Workflow and Job Stats:");
+    // console.log(JSON.stringify(finalStats, null, 2));
 
     // Simulate sending the data to GCP Logs (replace with real GCP logic)
-    sendToGCPLogs(jobStats);
+    sendToGCPLogs(finalStats);
 
+    // Optionally, save the stats locally
+    // fs.writeFileSync('final_stats.json', JSON.stringify(finalStats, null, 2));
 })();
 
 // Simulate sending data to GCP Logs
