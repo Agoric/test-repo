@@ -148,7 +148,12 @@ async function sendToGCPLogs(data) {
     // Define the metadata for the log entry
     const metadata = {
         resource: { type: 'global' },  // Resource type can be 'global' or more specific if needed
-        severity: 'INFO'               // You can set the severity level (e.g., INFO, ERROR, WARNING)
+        severity: 'INFO',
+        labels: {                      // Adding custom labels
+            identifier: 'GH-CI',    // Pass a unique identifier or label
+            workflow_name: data.workflow.workflowName,  // Example of passing a workflow name as a label
+        }
+               // You can set the severity level (e.g., INFO, ERROR, WARNING)
     };
 
     // Create the log entry
