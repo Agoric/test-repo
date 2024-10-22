@@ -15,18 +15,25 @@ const apiUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
 // Fetch workflow status via GitHub API
 async function fetchWorkflowStatus() {
     try {
-        const response = await axios.get(apiUrl, {
+        const response = await fetch(apiUrl, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${githubToken}`,
                 'Accept': 'application/vnd.github.v3+json',
             },
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
         // Extract relevant information
-        const status = response.data.status;           // in_progress, completed, etc.
-        const conclusion = response.data.conclusion;   // success, failure, neutral, cancelled, etc.
-        const startTime = response.data.created_at;
-        const endTime = response.data.updated_at;
+        const status = data.status;           // in_progress, completed, etc.
+        const conclusion = data.conclusion;   // success, failure, neutral, cancelled, etc.
+        const startTime = data.created_at;
+        const endTime = data.updated_at;
 
         const executionTime = (new Date(endTime) - new Date(startTime)) / 1000;  // Convert to seconds
 
