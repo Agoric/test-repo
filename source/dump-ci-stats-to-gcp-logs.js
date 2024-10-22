@@ -1,64 +1,65 @@
-// // Access the command line arguments passed to the script
-// const inputParam = process.argv[2]; // process.argv[0] is 'node', argv[1] is the script path
-
-// // Check if an argument was provided
-// if (!inputParam) {
-//     console.error("No parameter provided! Please pass a parameter as an argument.");
-//     process.exit(1); // Exit with a non-zero code to indicate an error
-// }
-
-// // Log the provided parameter to the console
-// console.log(`The provided parameter is: ${inputParam}`);
-
-// Import necessary modules
-// const fs = require('fs');
+// const axios = require('axios');
+const fs = require('fs');
 
 // Capture input parameter (e.g., "Test Job")
 const jobName = process.argv[2];
 
 // GitHub Actions environment variables
-const jobStatus = process.env.GITHUB_JOB;  // This gives you the name of the current job
-const conclusion = process.env.GITHUB_WORKFLOW;  // This gives the workflow name
-const runId = process.env.GITHUB_RUN_ID;   // Run ID for this particular workflow execution
-const runNumber = process.env.GITHUB_RUN_NUMBER; // Run number (increasing with each push)
-const actor = process.env.GITHUB_ACTOR;    // Who triggered the workflow (user)
-const repo = process.env.GITHUB_REPOSITORY; // The repo (owner/repo)
-const sha = process.env.GITHUB_SHA;        // Commit SHA being tested
+const githubToken = process.env.GITHUB_TOKEN;  // GitHub token for API access
+const repo = process.env.GITHUB_REPOSITORY;    // The repository (owner/repo)
+const runId = process.env.GITHUB_RUN_ID;       // Run ID for this particular workflow execution
 
-// Start and end time can be calculated from process times
-const startTime = new Date(process.env.GITHUB_EVENT_PATH);  // When the job started
-const endTime = new Date();  // When this script ends
-const executionTime = (endTime - startTime) / 1000;  // Convert to seconds
+// API endpoint to get workflow run information
+const apiUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
 
-// This function simulates sending data to GCP logs (can be replaced with actual GCP code)
+// Fetch workflow status via GitHub API
+async function fetchWorkflowStatus() {
+    try {
+        const response = await axios.get(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+            },
+        });
+
+        // Extract relevant information
+        const status = response.data.status;           // in_progress, completed, etc.
+        const conclusion = response.data.conclusion;   // success, failure, neutral, cancelled, etc.
+        const startTime = response.data.created_at;
+        const endTime = response.data.updated_at;
+
+        const executionTime = (new Date(endTime) - new Date(startTime)) / 1000;  // Convert to seconds
+
+        return { status, conclusion, executionTime, startTime, endTime };
+    } catch (error) {
+        console.error("Error fetching workflow status:", error.response.data);
+        process.exit(1);
+    }
+}
+
+// Main function to capture and log the stats
+(async () => {
+    const workflowStats = await fetchWorkflowStatus();
+
+    const jobStats = {
+        jobName: jobName,
+        repository: repo,
+        runId: runId,
+        status: workflowStats.status,
+        conclusion: workflowStats.conclusion,
+        executionTime: `${workflowStats.executionTime} seconds`,
+        startTime: workflowStats.startTime,
+        endTime: workflowStats.endTime,
+    };
+
+
+    // Simulate sending the data to GCP Logs (replace with real GCP logic)
+    sendToGCPLogs(jobStats);
+
+})();
+
+// Simulate sending data to GCP Logs
 function sendToGCPLogs(data) {
     console.log("Sending the following data to GCP Logs...");
     console.log(JSON.stringify(data, null, 2));
-    // In a real scenario, you would use a logging library to send this data to GCP.
 }
-
-// Gather the stats for the "Test Job"
-const jobStats = {
-    jobName: jobName,
-    repository: repo,
-    actor: actor,
-    commitSha: sha,
-    runId: runId,
-    runNumber: runNumber,
-    status: jobStatus,   // Whether the job succeeded, failed, or was canceled
-    conclusion: conclusion, // Workflow name or conclusion
-    executionTime: `${executionTime} seconds`, // Execution time in seconds
-    startTime: startTime,
-    endTime: endTime
-};
-
-// Log the stats to the console
-console.log("Job Stats:");
-console.log(JSON.stringify(jobStats, null, 2));
-
-// Simulate sending the data to GCP Logs
-// sendToGCPLogs(jobStats);
-
-// Optionally, you could save the data locally or to a log file
-// fs.writeFileSync('job_stats.json', JSON.stringify(jobStats, null, 2));
-
