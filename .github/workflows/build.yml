@@ -33,16 +33,10 @@ jobs:
         - name: Install Dependencies
           run: npm install @google-cloud/logging
 
-        - name: Set Google Application Credentials
-          env:
-            GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-          run: |
-            echo "$GOOGLE_APPLICATION_CREDENTIALS" > /tmp/credentials.json
-            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json
-    
         - name: Final Job
           env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           run: |
             echo "Determining which workflow triggered the Final Job..."
             node source/dump-ci-stats-to-gcp-logs.js "Build Job"

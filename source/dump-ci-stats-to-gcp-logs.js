@@ -11,6 +11,11 @@ const runId = process.env.GITHUB_RUN_ID;       // Run ID for this particular wor
 const workflowUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
 const jobsUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`;
 
+const gcpCredentials = JSON.parse(process.env.GCP_CREDENTIALS);
+
+console.log("GCP CREDS:", gcpCredentials);
+
+
 // Fetch workflow run-level details
 async function fetchWorkflowDetails() {
     try {
@@ -126,8 +131,13 @@ const { Logging } = require('@google-cloud/logging');  // Import the GCP Logging
 
 // Initialize the logging client
 const logging = new Logging({
-  projectId: 'texinnova'  // Replace with your Google Cloud Project ID
+    projectId: gcpCredentials.project_id,
+    credentials: {
+      client_email: gcpCredentials.client_email,
+      private_key: gcpCredentials.private_key
+    }
 });
+
 
 // Define the log name (you can change this to any descriptive name)
 const logName = 'ci-job-logs';
