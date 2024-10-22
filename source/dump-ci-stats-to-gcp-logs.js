@@ -122,7 +122,33 @@ async function fetchJobDetails() {
 })();
 
 // Simulate sending data to GCP Logs
-function sendToGCPLogs(data) {
-    console.log("Sending the following data to GCP Logs...");
-    console.log(JSON.stringify(data, null, 2));
+const { Logging } = require('@google-cloud/logging');  // Import the GCP Logging client
+
+// Initialize the logging client
+const logging = new Logging({
+  projectId: 'texinnova'  // Replace with your Google Cloud Project ID
+});
+
+// Define the log name (you can change this to any descriptive name)
+const logName = 'ci-job-logs';
+const log = logging.log(logName);
+
+// Function to send the final stats to GCP Logs
+async function sendToGCPLogs(data) {
+    // Define the metadata for the log entry
+    const metadata = {
+        resource: { type: 'global' },  // Resource type can be 'global' or more specific if needed
+        severity: 'INFO'               // You can set the severity level (e.g., INFO, ERROR, WARNING)
+    };
+
+    // Create the log entry
+    const entry = log.entry(metadata, data);
+
+    try {
+        // Write the log entry
+        await log.write(entry);
+        console.log('Log entry sent to GCP Logging successfully.');
+    } catch (error) {
+        console.error('Error sending log entry to GCP Logging:', error);
+    }
 }
