@@ -1,4 +1,4 @@
-// const fetch = require('node-fetch');
+const fetch = require('node-fetch');
 const fs = require('fs');
 
 // Capture input parameter (e.g., "Test Job")
@@ -39,7 +39,12 @@ async function fetchWorkflowDetails() {
             createdAt: data.created_at,
             updatedAt: data.updated_at,
             actor: data.actor.login,       // Who triggered the workflow
-            repository: data.repository.full_name
+            repository: data.repository.full_name,
+            event: data.event,             // e.g., "push", "pull_request"
+            runAttempt: data.run_attempt,  // Attempt number (for retries)
+            headBranch: data.head_branch,  // The branch that triggered the workflow
+            headSha: data.head_sha,        // The commit SHA that triggered the workflow
+            triggeredBy: data.actor.login  // The user who triggered the workflow
         };
 
         return workflowDetails;
@@ -75,7 +80,18 @@ async function fetchJobDetails() {
             startedAt: job.started_at,
             completedAt: job.completed_at,
             executionTime: job.completed_at ? 
-                (new Date(job.completed_at) - new Date(job.started_at)) / 1000 : null // In seconds
+                (new Date(job.completed_at) - new Date(job.started_at)) / 1000 : null, // In seconds
+            runnerName: job.runner_name,   // The name of the runner
+            steps: job.steps.map(step => ({
+                stepName: step.name,
+                status: step.status,         // e.g., "completed"
+                conclusion: step.conclusion, // e.g., "success", "failure"
+                startedAt: step.started_at,
+                completedAt: step.completed_at,
+                executionTime: step.completed_at ? 
+                    (new Date(step.completed_at) - new Date(step.started_at)) / 1000 : null // In seconds
+            })),
+            jobUrl: job.html_url // Link to the job details page
         }));
 
         return jobDetails;
