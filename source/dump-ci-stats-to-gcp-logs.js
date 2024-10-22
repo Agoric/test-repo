@@ -32,7 +32,7 @@ async function fetchWorkflowStatus() {
 
         return { status, conclusion, executionTime, startTime, endTime };
     } catch (error) {
-        console.error("Error fetching workflow status:", error.response.data);
+        console.error("Error fetching workflow status:", error);
         process.exit(1);
     }
 }
