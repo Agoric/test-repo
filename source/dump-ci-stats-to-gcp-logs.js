@@ -10,11 +10,7 @@ const runId = process.env.GITHUB_RUN_ID;       // Run ID for this particular wor
 // API endpoint to get the workflow run details and jobs
 const workflowUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;
 const jobsUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}/jobs`;
-
-console.log("process.env.GCP_CREDENTIALS", process.env.GCP_CREDENTIALS, process.env.GITHUB_TOKEN)
 const gcpCredentials = JSON.parse(process.env.GCP_CREDENTIALS);
-
-console.log("GCP CREDS:", gcpCredentials);
 
 
 // Fetch workflow run-level details

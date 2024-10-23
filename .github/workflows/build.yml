@@ -19,6 +19,7 @@ jobs:
     
     call_final_job:
         needs: test  # Ensures this job runs after the 'test' job
+        if: always()
         uses: ./.github/workflows/dump_ci_stats.yml  # Calls the reusable workflow
         with:
          workflow_name: "Build Job"
