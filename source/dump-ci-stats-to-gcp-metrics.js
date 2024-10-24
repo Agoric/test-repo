@@ -1,4 +1,4 @@
-const { Monitoring } = require('@google-cloud/monitoring');
+const Monitoring = require('@google-cloud/monitoring');
 // const fetch = require('node-fetch');
 
 // Parse GCP credentials from environment variables
