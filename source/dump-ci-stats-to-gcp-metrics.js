@@ -19,30 +19,33 @@ async function sendMetricsToGCP(metricType, metricValue, labels) {
 
   const request = {
     name: monitoring.projectPath(projectId),
-    resource: {
-      type: 'global',
-      labels: {
-        project_id: projectId
-      }
-    },
-    metric: {
-      type: `custom.googleapis.com/${metricType}`,
-      labels: labels
-    },
-    points: [
+    timeSeries: [  // Ensure this field is present
       {
-        interval: {
-          endTime: {
-            seconds: Math.floor(Date.now() / 1000)
+        metric: {
+          type: `custom.googleapis.com/${metricType}`,
+          labels: labels
+        },
+        resource: {
+          type: 'global',  // or you can specify more appropriate types like gce_instance, k8s_container, etc.
+          labels: {
+            project_id: projectId
           }
         },
-        value: {
-          doubleValue: metricValue
-        }
+        points: [
+          {
+            interval: {
+              endTime: {
+                seconds: Math.floor(Date.now() / 1000),
+              }
+            },
+            value: {
+              doubleValue: metricValue
+            }
+          }
+        ]
       }
     ]
   };
-
   try {
     await monitoring.createTimeSeries(request);
     console.log(`Metric ${metricType} sent successfully.`);
