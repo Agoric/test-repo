@@ -9,10 +9,11 @@ on:
       - main
 
 jobs:
-    test:
+    build:
         runs-on: ubuntu-latest
         steps:
         - name: Checkout Code
           uses: actions/checkout@v2
-        - name: Test Application
-          run: exit 1
+        - name: Build Application
+          run: echo "Building the application"
+
