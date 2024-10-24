@@ -1,11 +1,8 @@
 
-// Capture input parameter (e.g., "Test Job")
-const jobName = process.argv[2];
-
 // GitHub Actions environment variables
 const githubToken = process.env.GITHUB_TOKEN;  // GitHub token for API access
 const repo = process.env.GITHUB_REPOSITORY;    // The repository (owner/repo)
-const runId = process.env.GITHUB_RUN_ID;       // Run ID for this particular workflow execution
+const runId = process.argv[2];       // Run ID for this particular workflow execution
 
 // API endpoint to get the workflow run details and jobs
 const workflowUrl = `https://api.github.com/repos/${repo}/actions/runs/${runId}`;

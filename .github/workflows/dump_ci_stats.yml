@@ -1,12 +1,10 @@
 name: Dum GH CI Stats
 
 on:
-  workflow_call:  # This allows the workflow to be reused
-    inputs:
-      workflow_name:
-        description: 'Name of the CI workflow that triggered this job'
-        required: true
-        type: string
+  workflow_run:  # This allows the workflow to be reused
+    workflows: ['Build Job', 'Test Job']
+    types:
+      - completed
 
 jobs:
   final_job:
@@ -28,4 +26,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
-          node source/dump-ci-stats-to-gcp-logs.js "${{ inputs.workflow_name }}"
+          node source/dump-ci-stats-to-gcp-logs.js ${{ github.event.workflow_run.id }}

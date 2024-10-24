@@ -16,11 +16,3 @@ jobs:
           uses: actions/checkout@v2
         - name: Test Application
           run: echo "Testing the application"
-    
-    call_final_job:
-        needs: test  # Ensures this job runs after the 'test' job
-        if: always()
-        uses: ./.github/workflows/dump_ci_stats.yml  # Calls the reusable workflow
-        with:
-         workflow_name: "Test Job"
-        secrets: inherit
