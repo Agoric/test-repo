@@ -22,7 +22,7 @@ async function sendMetricsToGCP(metricType, metricValue, labels) {
     timeSeries: [  // Ensure this field is present
       {
         metric: {
-          type: `custom.googleapis.com/${metricType}`,
+          type: `custom.googleapis.com/github/${metricType}`,
           labels: labels
         },
         resource: {

@@ -14,5 +14,7 @@ jobs:
         steps:
         - name: Checkout Code
           uses: actions/checkout@v2
+        - name: Simulate Processing Delay
+          run: sleep 10
         - name: Test Application
           run: echo "Testing the application"
