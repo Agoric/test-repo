@@ -19,11 +19,11 @@ jobs:
           node-version: '18'
 
       - name: Install GCP Logging Client
-        run: npm install @google-cloud/logging
+        run: npm install @google-cloud/logging @google-cloud/monitoring
 
       - name: Run Final Job and Send Logs to GCP
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         run: |
-          node source/dump-ci-stats-to-gcp-logs.js ${{ github.event.workflow_run.id }}
+          node source/dump-ci-stats-to-gcp-logs.js ${{ github.event.workflow_run.id }} && node source/dump-ci-stats-to-gcp-metrics.js ${{ github.event.workflow_run.id }}
